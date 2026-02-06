@@ -26,12 +26,13 @@ export default {
       const botname = botSettings.botname || '';
       const namebot = botSettings.namebot || '';
 
-      // ✅ TU IMAGEN FIJA DEL MENÚ
+      // 🖼️ IMAGEN FIJA DEL MENÚ (NO DUPLICA)
       const banner = 'https://i.postimg.cc/q7vKvdTj/SAVE-20260205-191658.jpg';
 
       const owner = botSettings.owner || '';
       const canalId = botSettings.id || '';
       const canalName = botSettings.nameid || '';
+      const prefix = botSettings.prefix;
       const link = botSettings.link || links.api.channel;
 
       const isOficialBot = botId === global.client.user.id.split(':')[0] + '@s.whatsapp.net';
@@ -60,8 +61,9 @@ export default {
 
       if (args[0] && !cat) {
         return m.reply(
-          `《✧》 La categoria *${args[0]}* no existe.\n` +
-          `Categorias disponibles: *${Object.keys(alias).join(', ')}*`
+          `《✧》 La categoria *${args[0]}* no existe, las categorias disponibles son: *${Object.keys(alias).join(', ')}*.\n` +
+          `> Para ver la lista completa escribe *${usedPrefix}menu*\n` +
+          `> Para ver los comandos de una categoría escribe *${usedPrefix}menu [categoría]*`
         );
       }
 
@@ -70,12 +72,10 @@ export default {
         ? String(sections[cat] || '')
         : Object.values(sections).map(s => String(s || '')).join('\n\n');
 
-      let menu = bodyMenu
-        ? String(bodyMenu || '') + '\n\n' + content
-        : content;
+      let menu = bodyMenu ? String(bodyMenu || '') + '\n\n' + content : content;
 
       const replacements = {
-        $owner: owner ? (!isNaN(owner.replace(/@s\.whatsapp\.net$/, '')) ? global.db.data.users[owner]?.name || owner.split('@')[0] : owner) : 'Oculto',
+        $owner: owner ? (!isNaN(owner.replace(/@s\.whatsapp\.net$/, '')) ? global.db.data.users[owner]?.name || owner.split('@')[0] : owner) : 'Oculto por privacidad',
         $botType: botType,
         $device: device,
         $tiempo: tiempo,
@@ -94,7 +94,7 @@ export default {
         menu = menu.replace(new RegExp(`\\${key}`, 'g'), value);
       }
 
-      // ✅ ENVÍO FINAL SIN DUPLICAR IMAGEN
+      // ✅ ENVÍO FINAL (IMAGEN ÚNICA + NOMBRE AUTOMÁTICO)
       await client.sendMessage(
         m.chat,
         banner.includes('.mp4') || banner.includes('.webm')
@@ -109,6 +109,12 @@ export default {
                   newsletterJid: canalId,
                   serverMessageId: '',
                   newsletterName: canalName
+                },
+                externalAdReply: {
+                  title: botname,
+                  body: namebot,
+                  showAdAttribution: false,
+                  mediaType: 1
                 }
               }
             }
@@ -122,6 +128,12 @@ export default {
                   newsletterJid: canalId,
                   serverMessageId: '',
                   newsletterName: canalName
+                },
+                externalAdReply: {
+                  title: botname,
+                  body: namebot,
+                  showAdAttribution: false,
+                  mediaType: 1
                 }
               }
             },
