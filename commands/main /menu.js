@@ -23,10 +23,10 @@ export default {
       const botId = client?.user?.id.split(':')[0] + '@s.whatsapp.net';
       const botSettings = global.db.data.settings[botId] || {};
 
-      const botname = botSettings.botname || '';
-      const namebot = botSettings.namebot || '';
+      const botname = botSettings.botname || 'Bot Multi-Device'; // Nombre por defecto si no hay uno configurado
+      const namebot = botSettings.namebot || 'Bot System';
 
-      // 🖼️ IMAGEN FIJA DEL MENÚ (NO DUPLICA)
+      // 🖼️ IMAGEN FIJA DEL MENÚ
       const banner = 'https://i.postimg.cc/q7vKvdTj/SAVE-20260205-191658.jpg';
 
       const owner = botSettings.owner || '';
@@ -72,7 +72,10 @@ export default {
         ? String(sections[cat] || '')
         : Object.values(sections).map(s => String(s || '')).join('\n\n');
 
-      let menu = bodyMenu ? String(bodyMenu || '') + '\n\n' + content : content;
+      // ✨ SECCIÓN AÑADIDA: Encabezado con Bot Name y Creador
+      const header = `┏━━━━━━━━━━━━━━━━━━┓\n┃ 🤖 *BOT:* ${botname}\n┃ 👑 *CREADOR:* JEREMY\n┗━━━━━━━━━━━━━━━━━━┛\n\n`;
+
+      let menu = header + (bodyMenu ? String(bodyMenu || '') + '\n\n' + content : content);
 
       const replacements = {
         $owner: owner ? (!isNaN(owner.replace(/@s\.whatsapp\.net$/, '')) ? global.db.data.users[owner]?.name || owner.split('@')[0] : owner) : 'Oculto por privacidad',
@@ -94,7 +97,7 @@ export default {
         menu = menu.replace(new RegExp(`\\${key}`, 'g'), value);
       }
 
-      // ✅ ENVÍO FINAL (IMAGEN ÚNICA + NOMBRE AUTOMÁTICO)
+      // ✅ ENVÍO FINAL
       await client.sendMessage(
         m.chat,
         banner.includes('.mp4') || banner.includes('.webm')
@@ -112,7 +115,7 @@ export default {
                 },
                 externalAdReply: {
                   title: botname,
-                  body: namebot,
+                  body: `By: JEREMY`,
                   showAdAttribution: false,
                   mediaType: 1
                 }
@@ -131,7 +134,7 @@ export default {
                 },
                 externalAdReply: {
                   title: botname,
-                  body: namebot,
+                  body: `By: JEREMY`,
                   showAdAttribution: false,
                   mediaType: 1
                 }
