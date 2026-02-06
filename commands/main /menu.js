@@ -5,16 +5,6 @@ import axios from 'axios';
 import moment from 'moment-timezone';
 import { bodyMenu, menuObject } from '../../lib/commands.js';
 
-// Función para convertir texto a estilo "Apagado" (Monospace)
-const fuenteApagada = (text) => {
-  const ABC = {
-    'a': '𝚊', 'b': '𝚋', 'c': '𝚌', 'd': '𝚍', 'e': '𝚎', 'f': '𝚏', 'g': '𝚐', 'h': '𝚑', 'i': '𝚒', 'j': '𝚓', 'k': '𝚔', 'l': '𝚕', 'm': '𝚖', 'n': '𝚗', 'o': '𝚘', 'p': '𝚙', 'q': '𝚚', 'r': '𝚛', 's': '𝚜', 't': '𝚝', 'u': '𝚞', 'v': '𝚟', 'w': '𝚠', 'x': '𝚡', 'y': '𝚢', 'z': '𝚣',
-    'A': '𝙰', 'B': '𝙱', 'C': '𝙲', 'D': '𝙳', 'E': '𝙴', 'F': '𝙵', 'G': '𝙶', 'H': '𝙷', 'I': '𝙸', 'J': '𝙹', 'K': '𝙺', 'L': '𝙻', 'M': '𝙼', 'N': '𝙽', 'O': '𝙾', 'P': '𝙿', 'Q': '𝚀', 'R': '𝚁', 'S': '𝚂', 'T': '𝚃', 'U': '𝚄', 'V': '𝚅', 'W': '𝚆', 'X': '𝚇', 'Y': '𝚈', 'Z': '𝚉',
-    '0': '𝟶', '1': '𝟷', '2': '𝟸', '3': '𝟹', '4': '𝟺', '5': '𝟻', '6': '𝟼', '7': '𝟽', '8': '𝟾', '9': '𝟿'
-  };
-  return text.split('').map(char => ABC[char] || char).join('');
-};
-
 function normalize(text = '') {
   text = text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
   return text.endsWith('s') ? text.slice(0, -1) : text;
@@ -33,7 +23,7 @@ export default {
       const botId = client?.user?.id.split(':')[0] + '@s.whatsapp.net';
       const botSettings = global.db.data.settings[botId] || {};
 
-      const botname = botSettings.botname || 'GRIS MICAELA';
+      const botname = botSettings.botname || 'Bot Multi-Device'; // Nombre por defecto si no hay uno configurado
       const namebot = botSettings.namebot || 'Bot System';
 
       // 🖼️ IMAGEN FIJA DEL MENÚ
@@ -53,16 +43,37 @@ export default {
       const sender = global.db.data.users[m.sender].name;
       const time = client.uptime ? formatearMs(Date.now() - client.uptime) : "Desconocido";
 
+      const alias = {
+        anime: ['anime', 'reacciones'],
+        downloads: ['downloads', 'descargas'],
+        economia: ['economia', 'economy', 'eco'],
+        gacha: ['gacha', 'rpg'],
+        grupo: ['grupo', 'group'],
+        nsfw: ['nsfw', '+18'],
+        profile: ['profile', 'perfil'],
+        sockets: ['sockets', 'bots'],
+        utils: ['utils', 'utilidades', 'herramientas']
+      };
+
+      const input = normalize(args[0] || '');
+      const cat = Object.keys(alias).find(k => alias[k].map(normalize).includes(input));
+      const category = `${cat ? ` para \`${cat}\`` : '. *(˶ᵔ ᵕ ᵔ˶)*'}`;
+
+      if (args[0] && !cat) {
+        return m.reply(
+          `《✧》 La categoria *${args[0]}* no existe, las categorias disponibles son: *${Object.keys(alias).join(', ')}*.\n` +
+          `> Para ver la lista completa escribe *${usedPrefix}menu*\n` +
+          `> Para ver los comandos de una categoría escribe *${usedPrefix}menu [categoría]*`
+        );
+      }
+
       const sections = menuObject;
-      const content = normalize(args[0] || '') ? String(sections[normalize(args[0])] || '') : Object.values(sections).map(s => String(s || '')).join('\n\n');
+      const content = cat
+        ? String(sections[cat] || '')
+        : Object.values(sections).map(s => String(s || '')).join('\n\n');
 
-      // ✨ SECCIÓN CON LETRAS APAGADAS (𝙼𝙾𝙽𝙾𝚂𝙿𝙰𝙲𝙴)
-      const botTag = fuenteApagada('BOT:');
-      const creatorTag = fuenteApagada('CREADOR:');
-      const botNameStyled = fuenteApagada(botname);
-      const creatorNameStyled = fuenteApagada('JEREMY');
-
-      const header = `┏━━━━━━━━━━━━━━━━━━┓\n┃ 🤖 ${botTag} ${botNameStyled}\n┃ 👑 ${creatorTag} ${creatorNameStyled}\n┗━━━━━━━━━━━━━━━━━━┛\n\n`;
+      // ✨ SECCIÓN AÑADIDA: Encabezado con Bot Name y Creador
+      const header = `┏━━━━━━━━━━━━━━━━━━┓\n┃ 🤖 *BOT:* ${botname}\n┃ 👑 *CREADOR:* JEREMY\n┗━━━━━━━━━━━━━━━━━━┛\n\n`;
 
       let menu = header + (bodyMenu ? String(bodyMenu || '') + '\n\n' + content : content);
 
@@ -74,6 +85,7 @@ export default {
         $tempo: tempo,
         $users: users.toLocaleString(),
         $link: link,
+        $cat: category,
         $sender: sender,
         $botname: botname,
         $namebot: namebot,
@@ -85,27 +97,49 @@ export default {
         menu = menu.replace(new RegExp(`\\${key}`, 'g'), value);
       }
 
+      // ✅ ENVÍO FINAL
       await client.sendMessage(
         m.chat,
-        {
-          image: { url: banner },
-          caption: menu,
-          contextInfo: {
-            mentionedJid: [m.sender],
-            isForwarded: true,
-            forwardedNewsletterMessageInfo: {
-              newsletterJid: canalId,
-              serverMessageId: '',
-              newsletterName: canalName
-            },
-            externalAdReply: {
-              title: botname,
-              body: `By: JEREMY`,
-              showAdAttribution: false,
-              mediaType: 1
+        banner.includes('.mp4') || banner.includes('.webm')
+          ? {
+              video: { url: banner },
+              gifPlayback: true,
+              caption: menu,
+              contextInfo: {
+                mentionedJid: [m.sender],
+                isForwarded: true,
+                forwardedNewsletterMessageInfo: {
+                  newsletterJid: canalId,
+                  serverMessageId: '',
+                  newsletterName: canalName
+                },
+                externalAdReply: {
+                  title: botname,
+                  body: `By: JEREMY`,
+                  showAdAttribution: false,
+                  mediaType: 1
+                }
+              }
             }
-          }
-        },
+          : {
+              image: { url: banner },
+              caption: menu,
+              contextInfo: {
+                mentionedJid: [m.sender],
+                isForwarded: true,
+                forwardedNewsletterMessageInfo: {
+                  newsletterJid: canalId,
+                  serverMessageId: '',
+                  newsletterName: canalName
+                },
+                externalAdReply: {
+                  title: botname,
+                  body: `By: JEREMY`,
+                  showAdAttribution: false,
+                  mediaType: 1
+                }
+              }
+            },
         { quoted: m }
       );
 
